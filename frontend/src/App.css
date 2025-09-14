@@ -1,0 +1,221 @@
+/* ======================================================= */
+/* ==       COMPLETE STYLESHEET (App.css) - FINAL         == */
+/* ======================================================= */
+
+/* --- Global Styles & Dark Theme --- */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+body { margin: 0; font-family: 'Roboto', sans-serif; background-color: #121212; color: #e0e0e0; }
+.App { max-width: 90%; margin: 0 auto; padding: 20px; }
+.success-message { color: #4CAF50; font-weight: bold; text-align: center; }
+
+/* --- Navbar --- */
+nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #333; margin-bottom: 40px; }
+nav .logo { font-size: 24px; font-weight: bold; color: white; text-decoration: none; }
+nav .nav-links a { color: #e0e0e0; text-decoration: none; margin-left: 20px; font-size: 18px; transition: color 0.2s; }
+nav .nav-links a:hover { color: #4CAF50; }
+.logout-button { background: none; border: none; color: #e0e0e0; font-family: 'Roboto', sans-serif; margin-left: 20px; font-size: 18px; cursor: pointer; padding: 0; }
+.logout-button:hover { color: #4CAF50; }
+
+/* --- NEW: Problem List Challenge Grid --- */
+.language-category { margin-bottom: 40px; }
+.language-header { color: white; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; margin-bottom: 20px; font-size: 28px; text-transform: capitalize; }
+.problem-grid { display: flex; flex-wrap: wrap; gap: 20px; /* This creates the grid */ }
+.problem-tile { position: relative; width: 100px; height: 100px; background-color: #1e1e1e; border: 1px solid #333; border-radius: 8px; display: flex; justify-content: center; align-items: center; text-decoration: none; transition: all 0.3s ease; overflow: hidden; /* Important for the hover effect */ }
+.problem-tile:hover { transform: scale(1.05); border-color: #4CAF50; }
+.problem-number { font-size: 36px; font-weight: bold; color: #e0e0e0; transition: opacity 0.3s ease; }
+.problem-hover-info { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.8); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 5px; opacity: 0; /* Hidden by default */ transition: opacity 0.3s ease; }
+.problem-tile:hover .problem-number { opacity: 0.1; /* Fade out the number on hover */ }
+.problem-tile:hover .problem-hover-info { opacity: 1; /* Fade in the info on hover */ }
+.problem-hover-info h3 { color: white; font-size: 14px; margin: 0 0 5px 0; }
+.marks-tag-hover { background-color: #4CAF50; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; }
+
+/* --- Editor Page --- */
+.editor-page-container { display: flex; flex-direction: column; }
+.editor-layout-container { display: flex; flex-direction: row; gap: 20px; margin-bottom: 20px; }
+.editor-column { flex: 3; }
+.output-column { flex: 2; display: flex; flex-direction: column; }
+.output-column h3 { margin-top: 0; }
+.output-column .output-box { flex-grow: 1; border: 1px solid #333; background: #1e1e1e; padding: 15px; margin-top: 0; white-space: pre-wrap; font-family: 'Courier New', Courier, monospace; }
+.editor-page-container button { background-color: #4CAF50; color: white; border: none; padding: 12px 25px; font-size: 16px; border-radius: 5px; cursor: pointer; align-self: center; width: 200px; }
+
+/* --- Leaderboard Page --- */
+.leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+.leaderboard-table th, .leaderboard-table td { padding: 15px; text-align: left; border-bottom: 1px solid #333; }
+.leaderboard-table th { background-color: #1e1e1e; color: white; font-size: 18px; }
+.leaderboard-table .rank { font-weight: bold; font-size: 20px; color: #4CAF50; }
+
+/* --- Auth & Admin Forms --- */
+.auth-container, .admin-panel-container, .admin-form-container { max-width: 800px; margin: 40px auto; padding: 30px; background-color: #1e1e1e; border-radius: 8px; border: 1px solid #333; }
+.auth-container h1, .admin-panel-container h1, .admin-form-container h1 { text-align: center; color: white; }
+.auth-container form, .admin-form-container form { display: flex; flex-direction: column; }
+.auth-container input, .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #444; background-color: #252525; color: #e0e0e0; font-size: 16px; box-sizing: border-box; }
+.auth-container button { background-color: #4CAF50; color: white; border: none; padding: 12px; font-size: 16px; border-radius: 5px; cursor: pointer; }
+.auth-container p { text-align: center; margin-top: 15px; }
+.auth-container p a { color: #4CAF50; }
+.admin-login-link { margin-top: 25px; font-size: 14px; text-align: center; }
+.admin-login-link a { color: #888; text-decoration: none; }
+.admin-login-link a:hover { color: #4CAF50; }
+.admin-setting { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #333; }
+.admin-setting h2 { color: white; }
+.admin-setting button { background-color: #f44336; color: white; border: none; padding: 10px 20px; font-size: 14px; border-radius: 5px; cursor: pointer; }
+.admin-actions { display: flex; gap: 15px; }
+.admin-action-btn { display: inline-block; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; }
+.admin-action-btn.create { background-color: #2196F3; }
+.admin-action-btn.manage { background-color: #ff9800; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 8px; color: #ccc; font-weight: bold; }
+.form-group textarea { min-height: 100px; resize: vertical; }
+.form-group-inline { display: flex; gap: 20px; }
+.form-group-inline .form-group { flex: 1; }
+.test-case-group { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
+.test-case-group textarea { min-height: 40px; flex: 1; }
+.add-btn, .remove-btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
+.add-btn { background-color: #4CAF50; }
+.remove-btn { background-color: #f44336; }
+.submit-problem-btn { width: 100%; padding: 15px; font-size: 18px; background-color: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; }
+.admin-manage-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+.admin-manage-table th, .admin-manage-table td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+.admin-manage-table th { background-color: #252525; }
+.manage-page-delete-btn { background-color: #f44336; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+/* --- 20. Navbar Score Display --- */
+.nav-score {color: #4CAF50; font-weight: bold;font-size: 18px;margin-right: 20px;display: flex;align-items: center;}
+/* --- 20. AI Generator Section --- */
+.ai-generator-section {
+  background-color: #252525;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+.ai-generator-section h2 {
+  margin-top: 0;
+  color: #4CAF50; /* Green accent */
+}
+.generate-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.generate-btn:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+/* --- 21. Admin Manage Table - EDIT MODE --- */
+.marks-input {
+    width: 60px;
+    padding: 8px;
+    background-color: #333;
+    color: white;
+    border: 1px solid #555;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 10px;
+}
+
+.actions-cell button {
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+}
+
+.edit-btn { background-color: #2196F3; } /* Blue */
+.save-btn { background-color: #4CAF50; } /* Green */
+.cancel-btn { background-color: #6c757d; } /* Grey */
+.manage-page-delete-btn, .delete-btn { background-color: #f44336; } /* Red */
+.problem-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.problem-header h2 {
+    margin: 0;
+}
+
+.marks-tag-large {
+    background-color: #4CAF50;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 18px;
+    font-weight: bold;
+}
+/* --- 23. Editor Page - Run/Submit UI --- */
+.run-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.custom-input-box {
+    background-color: #252525;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 10px;
+    font-family: 'Courier New', Courier, monospace;
+    min-height: 100px; /* Give it a decent size */
+    resize: vertical;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Space between buttons */
+    margin-top: 20px;
+}
+
+.run-btn, .submit-btn {
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+.run-btn { background-color: #2196F3; } /* Blue for Run */
+.submit-btn { background-color: #4CAF50; } /* Green for Submit */
+
+.run-btn:disabled, .submit-btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+/* --- 23. Admin Panel Danger Zone --- */
+.danger-zone {
+    border: 2px solid #f44336; /* Red border */
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.danger-zone h2 {
+    color: #f44336;
+}
+
+.reset-scores-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
