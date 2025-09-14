@@ -32,34 +32,36 @@ app.post('/api/admin/problems', [auth, adminAuth], async (req, res) => { const {
 app.delete('/api/admin/problems/:id', [auth, adminAuth], async (req, res) => { try { const problem = await Problem.findByIdAndDelete(req.params.id); if (!problem) return res.status(404).json({ msg: 'Problem not found' }); res.json({ msg: 'Problem removed successfully' }); } catch (err) { console.error(err.message); res.status(500).send('Server Error'); } });
 app.put('/api/admin/problems/:id', [auth, adminAuth], async (req, res) => { const { marks } = req.body; try { const updatedProblem = await Problem.findByIdAndUpdate(req.params.id, { marks }, { new: true }); if (!updatedProblem) return res.status(404).json({ msg: 'Problem not found' }); res.json(updatedProblem); } catch (err) { console.error(err.message); res.status(500).send('Server Error'); } });
 app.post('/api/admin/settings', [auth, adminAuth], async (req, res) => { const { isLeaderboardVisible } = req.body; try { let s = await Settings.findOneAndUpdate({}, { isLeaderboardVisible }, { new: true, upsert: true }); res.json(s); } catch (err) { res.status(500).send('Server Error'); } });
-app.post('/api/admin/generate-problem', [auth, adminAuth], async (req, res) => { const { prompt, language } = req.body; try { const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest"}); let languageSpecificInstructions = ''; if (language === 'c' || language === 'cpp' || language === 'java') { languageSpecificInstructions = `The "code" field MUST be a complete, runnable program including a main function and all necessary headers. It must read from standard input (like scanf or Scanner) and print ONLY the required output. For Java, the main public class MUST be named "Main".`; } else { languageSpecificInstructions = `The "code" field MUST be a simple, interactive script that uses input() or prompt() to get user data.`; } const fullPrompt = `You are an assistant that only responds with JSON. The user wants a problem generated in the language: **${language}**. Based on the user's request, generate a JSON object with "title", "description", "code", and "testCases". ${languageSpecificInstructions} The "testCases" field must be an array of two distinct objects with "input" and "expectedOutput" string fields. User Request: "${prompt}"`; const result = await model.generateContent(fullPrompt); const responseText = result.response.text(); const jsonMatch = responseText.match(/\{[\s\S]*\}/); if (!jsonMatch) { throw new Error("AI did not return a parsable JSON object."); } const jsonString = jsonMatch[0]; const jsonResponse = JSON.parse(jsonString); res.json(jsonResponse); } catch (error) { console.error("AI Generation Error:", error); res.status(500).json({ msg: "Failed to generate or parse content from AI." }); } });
+app.post('/api/admin/generate-problem', [auth, adminAuth], async (req, res) => { const { prompt, language } = req.body; try { const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest"}); let languageSpecificInstructions = ''; if (language === 'c' || language === 'cpp' || language === 'java') { languageSpecificInstructions = `The "code" field MUST be a complete, runnable program including a main function and all necessary headers. For Java, the main public class MUST be named "Main".`; } else { languageSpecificInstructions = `The "code" field MUST be a simple, interactive script that uses input() or prompt().`; } const fullPrompt = `You are an assistant that only responds with JSON. The user wants a problem generated in the language: **${language}**. Based on the user's request, generate a JSON object with "title", "description", "code", and "testCases". ${languageSpecificInstructions} The "testCases" field must be an array of two distinct objects with "input" and "expectedOutput" string fields. User Request: "${prompt}"`; const result = await model.generateContent(fullPrompt); const responseText = result.response.text(); const jsonMatch = responseText.match(/\{[\s\S]*\}/); if (!jsonMatch) { throw new Error("AI did not return a parsable JSON object."); } const jsonString = jsonMatch[0]; const jsonResponse = JSON.parse(jsonString); res.json(jsonResponse); } catch (error) { console.error("AI Generation Error:", error); res.status(500).json({ msg: "Failed to generate or parse content from AI." }); } });
 
 // --- THIS IS THE NEW, SUPER-STRICT GEMINI COMPILER FUNCTION ---
 const executeCodeWithGemini = async (language, code, input) => {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
         const masterPrompt = `
-            You are a strict, precise, and literal code execution engine. You MUST act exactly like a command-line interpreter.
-            
-            **CRITICAL INSTRUCTION:** You MUST execute the provided code EXACTLY as it is written. DO NOT fix any logical bugs, errors, or typos. If the code contains a bug that produces a wrong answer or an error, you MUST return that specific wrong answer or error. Do not explain the bug. Do not correct the code. Just run it.
+            You are a Computer Science Professor acting as a strict, literal code execution engine.
+            Your ONLY task is to simulate the execution of the following code EXACTLY as a real command-line compiler/interpreter would.
 
-            Here is the information:
+            **CRITICAL PRIMARY DIRECTIVE:** You MUST execute the provided code LITERALLY and EXACTLY as it is written. DO NOT fix any bugs. DO NOT correct logical errors. If the code has a bug that produces a wrong answer, an incomplete answer, or an error, you MUST return that specific wrong answer, incomplete answer, or error. Your purpose is to show the user the REAL output of THEIR code, not the output of the CORRECTED code. This is for a debugging competition, so showing the bug's output is the most important goal.
+
+            Here is the information for your simulation:
             - **Language:** ${language}
-            - **User's Code:**
+            - **User's Code to Execute:**
             \`\`\`${language}
             ${code}
             \`\`\`
-            - **User's Input (stdin):**
+            - **Standard Input (stdin) to provide to the code:**
             \`\`\`
             ${input || ''}
             \`\`\`
 
-            Follow these rules with absolute precision:
-            1.  **SYNTAX/COMPILE ERRORS:** If the code has a syntax error, respond ONLY with the exact compiler error message.
-            2.  **RUNTIME ERRORS:** If the code compiles but produces a runtime error with the given input, respond ONLY with that exact runtime error message.
-            3.  **CORRECT/INCORRECT OUTPUT:** If the code runs without errors, respond ONLY with the exact text the program would print to the standard output.
-            
-            **DO NOT ADD ANY EXTRA TEXT.** Do not explain the output. Do not explain the error. Respond ONLY with the raw, exact output or the raw, exact error message.
+            Follow this simulation process:
+            1.  Check for syntax or compile errors first. If any exist, STOP and respond ONLY with the exact compiler error message.
+            2.  If it compiles, simulate the code's execution line by line with the provided stdin.
+            3.  If a runtime error occurs, STOP and respond ONLY with the exact runtime error message.
+            4.  If the code completes, respond ONLY with the exact text that the program printed to the standard output.
+
+            **DO NOT ADD ANY EXPLANATIONS, APOLOGIES, OR INTRODUCTORY TEXT.** Your entire response must be ONLY the raw output or the raw error.
         `;
         const result = await model.generateContent(masterPrompt);
         const output = result.response.text();
