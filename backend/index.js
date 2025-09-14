@@ -1,4 +1,6 @@
-
+// =================================================================
+// == COMPLETE BACKEND CODE (index.js) - FINAL WITH STRICT AI     ==
+// =================================================================
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -6,15 +8,6 @@ const cors = require('cors');
 const auth = require('./middleware/auth');
 const adminAuth = require('./middleware/adminAuth');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-// --- Check for required secrets on startup ---
-const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET', 'GOOGLE_API_KEY'];
-for (const varName of requiredEnvVars) {
-    if (!process.env[varName]) {
-        console.error(`FATAL ERROR: Environment variable ${varName} is not defined.`);
-        process.exit(1);
-    }
-}
 
 const User = require('./models/User');
 const Settings = require('./models/Settings');
@@ -27,10 +20,7 @@ app.use(express.json());
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
-mongoose.connect(process.env.MONGO_URI).then(() => console.log('MongoDB connected...')).catch(err => {
-    console.error("MongoDB Connection Error:", err.message);
-    process.exit(1);
-});
+mongoose.connect(process.env.MONGO_URI).then(() => console.log('MongoDB connected...')).catch(err => { console.error("MongoDB Connection Error:", err.message); process.exit(1); });
 
 // --- API Endpoints (No changes to most routes) ---
 app.use('/api/auth', require('./routes/auth'));
@@ -38,19 +28,39 @@ app.get('/', (req, res) => res.send('<h1>Debugging Contest API is running!</h1>'
 app.get('/api/problems', async (req, res) => { try { const p = await Problem.find({}, '_id title description language marks'); res.json(p); } catch (e) { res.status(500).json({ msg: "Server error" }); } });
 app.get('/api/problems/:id', auth, async (req, res) => { try { const p = await Problem.findById(req.params.id); if(!p) return res.status(404).json({ msg: 'Problem not found' }); res.json({ title: p.title, buggyCode: p.buggyCode, language: p.language, marks: p.marks }); } catch (e) { res.status(500).json({ msg: 'Server error' }); } });
 app.get('/api/settings', async (req, res) => { try { let s = await Settings.findOne(); if (!s) { s = new Settings(); await s.save(); } res.json(s); } catch (err) { res.status(500).send('Server Error'); } });
-
-// --- Admin Routes ---
 app.post('/api/admin/problems', [auth, adminAuth], async (req, res) => { const { title, description, language, buggyCode, marks, testCases } = req.body; try { const newProblem = new Problem({ title, description, language, buggyCode, marks, testCases }); const problem = await newProblem.save(); res.json(problem); } catch (err) { console.error(err.message); res.status(500).send('Server Error'); } });
 app.delete('/api/admin/problems/:id', [auth, adminAuth], async (req, res) => { try { const problem = await Problem.findByIdAndDelete(req.params.id); if (!problem) return res.status(404).json({ msg: 'Problem not found' }); res.json({ msg: 'Problem removed successfully' }); } catch (err) { console.error(err.message); res.status(500).send('Server Error'); } });
 app.put('/api/admin/problems/:id', [auth, adminAuth], async (req, res) => { const { marks } = req.body; try { const updatedProblem = await Problem.findByIdAndUpdate(req.params.id, { marks }, { new: true }); if (!updatedProblem) return res.status(404).json({ msg: 'Problem not found' }); res.json(updatedProblem); } catch (err) { console.error(err.message); res.status(500).send('Server Error'); } });
 app.post('/api/admin/settings', [auth, adminAuth], async (req, res) => { const { isLeaderboardVisible } = req.body; try { let s = await Settings.findOneAndUpdate({}, { isLeaderboardVisible }, { new: true, upsert: true }); res.json(s); } catch (err) { res.status(500).send('Server Error'); } });
-app.post('/api/admin/generate-problem', [auth, adminAuth], async (req, res) => { const { prompt, language } = req.body; try { const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest"}); const fullPrompt = `You are an assistant that only responds with JSON. The user wants a problem generated in the language: **${language}**. Based on the user's request, generate a JSON object with "title", "description", "code", and "testCases". The "code" MUST be a complete, runnable program. The "testCases" MUST be an array of two distinct objects with "input" and "expectedOutput" string fields. User Request: "${prompt}"`; const result = await model.generateContent(fullPrompt); const responseText = result.response.text(); const jsonMatch = responseText.match(/\{[\s\S]*\}/); if (!jsonMatch) { throw new Error("AI did not return a parsable JSON object."); } const jsonString = jsonMatch[0]; const jsonResponse = JSON.parse(jsonString); res.json(jsonResponse); } catch (error) { console.error("AI Generation Error:", error); res.status(500).json({ msg: "Failed to generate or parse content from AI." }); } });
+app.post('/api/admin/generate-problem', [auth, adminAuth], async (req, res) => { const { prompt, language } = req.body; try { const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest"}); let languageSpecificInstructions = ''; if (language === 'c' || language === 'cpp' || language === 'java') { languageSpecificInstructions = `The "code" field MUST be a complete, runnable program including a main function and all necessary headers. It must read from standard input (like scanf or Scanner) and print ONLY the required output. For Java, the main public class MUST be named "Main".`; } else { languageSpecificInstructions = `The "code" field MUST be a simple, interactive script that uses input() or prompt() to get user data.`; } const fullPrompt = `You are an assistant that only responds with JSON. The user wants a problem generated in the language: **${language}**. Based on the user's request, generate a JSON object with "title", "description", "code", and "testCases". ${languageSpecificInstructions} The "testCases" field must be an array of two distinct objects with "input" and "expectedOutput" string fields. User Request: "${prompt}"`; const result = await model.generateContent(fullPrompt); const responseText = result.response.text(); const jsonMatch = responseText.match(/\{[\s\S]*\}/); if (!jsonMatch) { throw new Error("AI did not return a parsable JSON object."); } const jsonString = jsonMatch[0]; const jsonResponse = JSON.parse(jsonString); res.json(jsonResponse); } catch (error) { console.error("AI Generation Error:", error); res.status(500).json({ msg: "Failed to generate or parse content from AI." }); } });
 
-// --- THIS IS THE NEW, REUSABLE GEMINI COMPILER FUNCTION ---
+// --- THIS IS THE NEW, SUPER-STRICT GEMINI COMPILER FUNCTION ---
 const executeCodeWithGemini = async (language, code, input) => {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
-        const masterPrompt = `You are a strict code interpreter. Act like an online compiler. Analyze the provided code and simulate its execution with the given input. Rules: 1. If there's a compile or syntax error, respond ONLY with the exact error message. 2. If there's a runtime error, respond ONLY with that error. 3. If the code runs successfully, respond ONLY with the program's final standard output. Do not add any extra text or explanations. Language: ${language}. Input (stdin): "${input || ''}". Code: \n\n${code}`;
+        const masterPrompt = `
+            You are a strict, precise, and literal code execution engine. You MUST act exactly like a command-line interpreter.
+            
+            **CRITICAL INSTRUCTION:** You MUST execute the provided code EXACTLY as it is written. DO NOT fix any logical bugs, errors, or typos. If the code contains a bug that produces a wrong answer or an error, you MUST return that specific wrong answer or error. Do not explain the bug. Do not correct the code. Just run it.
+
+            Here is the information:
+            - **Language:** ${language}
+            - **User's Code:**
+            \`\`\`${language}
+            ${code}
+            \`\`\`
+            - **User's Input (stdin):**
+            \`\`\`
+            ${input || ''}
+            \`\`\`
+
+            Follow these rules with absolute precision:
+            1.  **SYNTAX/COMPILE ERRORS:** If the code has a syntax error, respond ONLY with the exact compiler error message.
+            2.  **RUNTIME ERRORS:** If the code compiles but produces a runtime error with the given input, respond ONLY with that exact runtime error message.
+            3.  **CORRECT/INCORRECT OUTPUT:** If the code runs without errors, respond ONLY with the exact text the program would print to the standard output.
+            
+            **DO NOT ADD ANY EXTRA TEXT.** Do not explain the output. Do not explain the error. Respond ONLY with the raw, exact output or the raw, exact error message.
+        `;
         const result = await model.generateContent(masterPrompt);
         const output = result.response.text();
         return output.trim();
